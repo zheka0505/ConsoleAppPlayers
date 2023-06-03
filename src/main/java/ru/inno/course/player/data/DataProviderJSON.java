@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 public class DataProviderJSON implements DataProvider{
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
     private final static Path FILEPATH = Path.of("./data.json");
     @Override
     public void save(Collection<Player> players) throws IOException {
@@ -17,7 +17,6 @@ public class DataProviderJSON implements DataProvider{
 
     @Override
     public Collection<Player> load() throws IOException {
-        Collection<Player> players = mapper.readValue(FILEPATH.toFile(), new TypeReference<Collection<Player>>(){});
-        return players;
+        return mapper.readValue(FILEPATH.toFile(), new TypeReference<Collection<Player>>(){});
     }
 }

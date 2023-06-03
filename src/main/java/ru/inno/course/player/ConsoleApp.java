@@ -10,71 +10,73 @@ import java.util.Scanner;
 public class ConsoleApp {
 
     public static void main(String[] args) {
-
         Scanner scanner = new Scanner(System.in);
         PlayerService service = new PlayerServiceImpl();
 
         printHelp();
 
-        // TODO: continue on Exceptions
         while (true) {
-            String command = scanner.nextLine();
-            if (!isKnownCommand(command)) {
-                System.out.println("Unknown command!");
-                printHelp();
-            }
-
-            if (command.equalsIgnoreCase("list")) {
-                Collection<Player> players = service.getPlayers();
-                if (players.size() == 0) {
-                    System.out.println("Empty player list");
+            try {
+                String command = scanner.nextLine();
+                if (!isKnownCommand(command)) {
+                    System.out.println("Unknown command!");
+                    printHelp();
                 }
 
-                for (Player player : players) {
+                if (command.equalsIgnoreCase("list")) {
+                    Collection<Player> players = service.getPlayers();
+                    if (players.size() == 0) {
+                        System.out.println("Empty player list");
+                    }
+
+                    for (Player player : players) {
+                        System.out.println(player);
+                    }
+                }
+
+                // add Max
+                if (command.toLowerCase().startsWith("add ")) {
+                    String nick = command.substring(4);
+                    int newPlayerId = service.createPlayer(nick);
+                    System.out.println(newPlayerId);
+                }
+
+                // get 1
+                if (command.toLowerCase().startsWith("get ")) {
+                    String idAsString = command.substring(4);
+                    int id = Integer.parseInt(idAsString);
+                    Player player = service.getPlayerById(id);
                     System.out.println(player);
                 }
-            }
 
-            // add Max
-            if (command.toLowerCase().startsWith("add ")) {
-                String nick = command.substring(4);
-                int newPlayerId = service.createPlayer(nick);
-                System.out.println(newPlayerId);
-            }
+                // delete 1
+                if (command.toLowerCase().startsWith("delete ")) {
+                    String idAsString = command.substring(7);
+                    int id = Integer.parseInt(idAsString);
+                    Player player = service.deletePlayer(id);
+                    System.out.println(player);
+                }
 
-            // get 1
-            if (command.toLowerCase().startsWith("get ")) {
-                String idAsString = command.substring(4);
-                int id = Integer.parseInt(idAsString);
-                Player player = service.getPlayerById(id);
-                System.out.println(player);
-            }
+                // points 1 20 => [ "1", "20" ]
+                if (command.toLowerCase().startsWith("points ")) {
+                    String argsString = command.substring(7);
+                    String[] arguments = argsString.split(" ");
+                    int id = Integer.parseInt(arguments[0]);
+                    int points = Integer.parseInt(arguments[1]);
 
-            // delete 1
-            if (command.toLowerCase().startsWith("delete ")) {
-                String idAsString = command.substring(7);
-                int id = Integer.parseInt(idAsString);
-                Player player = service.deletePlayer(id);
-                System.out.println(player);
-            }
+                    int newScore = service.addPoints(id, points);
+                    System.out.println(newScore);
+                }
 
-            // points 1 20 => [ "1", "20" ]
-            if (command.toLowerCase().startsWith("points ")) {
-                String argsString = command.substring(7);
-                String[] arguments = argsString.split(" ");
-                int id = Integer.parseInt(arguments[0]);
-                int points = Integer.parseInt(arguments[1]);
+                if (command.equalsIgnoreCase("quit")) {
+                    System.exit(0);
+                }
 
-                int newScore = service.addPoints(id, points);
-                System.out.println(newScore);
-            }
-
-            if (command.equalsIgnoreCase("quit")) {
-                System.exit(0);
-            }
-
-            if (command.equalsIgnoreCase("help")) {
-                printHelp();
+                if (command.equalsIgnoreCase("help")) {
+                    printHelp();
+                }
+            } catch (Exception ex) {
+                System.err.println(ex.getMessage());
             }
         }
 
@@ -82,9 +84,9 @@ public class ConsoleApp {
 
     private static boolean isKnownCommand(String command) {
         String lowerCase = command.toLowerCase();
-        return command.equalsIgnoreCase("help")
-                || command.equalsIgnoreCase("quit")
-                || command.equalsIgnoreCase("list")
+        return lowerCase.equals("help")
+                || lowerCase.equals("quit")
+                || lowerCase.equals("list")
                 || lowerCase.startsWith("add ")
                 || lowerCase.startsWith("get ")
                 || lowerCase.startsWith("delete ")

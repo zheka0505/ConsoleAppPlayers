@@ -10,7 +10,7 @@ public class PlayerServiceImpl implements PlayerService {
     private Map<Integer, Player> players;
     private Set<String> nicknames;
     private int counter = 0;
-    private DataProvider provider;
+    private final DataProvider provider;
     public PlayerServiceImpl() {
         provider = new DataProviderJSON();
         initStorages();
