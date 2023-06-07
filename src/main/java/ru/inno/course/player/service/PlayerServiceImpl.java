@@ -11,6 +11,7 @@ public class PlayerServiceImpl implements PlayerService {
     private Set<String> nicknames;
     private int counter = 0;
     private final DataProvider provider;
+
     public PlayerServiceImpl() {
         provider = new DataProviderJSON();
         initStorages();
@@ -18,7 +19,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public Player getPlayerById(int id) {
-        if ( !this.players.containsKey(id)){
+        if (!this.players.containsKey(id)) {
             throw new NoSuchElementException("No such user: " + id);
         }
 
@@ -32,8 +33,15 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public int createPlayer(String nickname) {
-        if (nicknames.contains(nickname)){
-            throw new IllegalArgumentException("Nickname is already in use: "+ nickname);
+        if (nickname == null) {
+            throw new IllegalArgumentException("Nickname is required");
+        }
+
+        if (nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname is blank");
+        }
+        if (nicknames.contains(nickname)) {
+            throw new IllegalArgumentException("Nickname is already in use: " + nickname);
         }
 
         counter++;
@@ -46,19 +54,24 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public Player deletePlayer(int id) {
-        if ( !this.players.containsKey(id)){
+        if (!this.players.containsKey(id)) {
             throw new NoSuchElementException("No such user: " + id);
         }
 
         Player p = this.players.remove(id);
+        nicknames.remove(p.getNick());
         saveToFile();
         return p;
     }
 
     @Override
     public int addPoints(int playerId, int points) {
-        if ( !this.players.containsKey(playerId)){
+        if (!this.players.containsKey(playerId)) {
             throw new NoSuchElementException("No such user: " + playerId);
+        }
+
+        if (points < 1) {
+            throw new IllegalArgumentException("Points must be greater than 0: " + points);
         }
 
         Player player = this.players.get(playerId);
@@ -72,9 +85,9 @@ public class PlayerServiceImpl implements PlayerService {
     private void initStorages() {
         Collection<Player> currentList = Collections.EMPTY_LIST;
         try {
-             currentList = provider.load();
-        } catch (Exception ex){
-            System.err.println("File loading error. "+ ex);
+            currentList = provider.load();
+        } catch (Exception ex) {
+            System.err.println("File loading error. " + ex);
         }
 
         players = new HashMap<>();
@@ -83,7 +96,7 @@ public class PlayerServiceImpl implements PlayerService {
         for (Player player : currentList) {
             players.put(player.getId(), player);
             nicknames.add(player.getNick());
-            if (player.getId() > counter){
+            if (player.getId() > counter) {
                 counter = player.getId();
             }
         }
@@ -92,7 +105,7 @@ public class PlayerServiceImpl implements PlayerService {
     private void saveToFile() {
         try {
             this.provider.save(players.values());
-        } catch (Exception ex){
+        } catch (Exception ex) {
             System.err.println("File saving error");
         }
     }
