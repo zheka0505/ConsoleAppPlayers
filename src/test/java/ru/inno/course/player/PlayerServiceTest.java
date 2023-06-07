@@ -1,68 +1,71 @@
 package ru.inno.course.player;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import ru.inno.course.player.extensions.FileHelperExt;
+import ru.inno.course.player.extensions.HtmlReporter;
+import ru.inno.course.player.extensions.MyTestWatcher;
 import ru.inno.course.player.model.Player;
 import ru.inno.course.player.service.PlayerService;
 import ru.inno.course.player.service.PlayerServiceImpl;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DisplayName("Тесты на бизнес-логику")
+@ExtendWith(FileHelperExt.class)
+@ExtendWith(MyTestWatcher.class)
+@ExtendWith(HtmlReporter.class)
 public class PlayerServiceTest {
     private PlayerService service;
     private final static String PLAYER_NAME = "Player name";
-    private static Path filePath;
 
     @BeforeEach
     public void setUp() {
-        filePath = Path.of("data.json");
         service = new PlayerServiceImpl();
     }
 
-    @AfterEach
-    public void deleteFileIfNeeded() throws IOException {
-        Files.deleteIfExists(filePath);
-    }
-
-    @Test
     @DisplayName("Создание пользователя с валидными данными")
-    public void shouldCreatePlayer() {
-        int newId = service.createPlayer(PLAYER_NAME);
+    @ParameterizedTest(name = "Имя игрока = {0}")
+    @MethodSource("getPlayers")
+    public void a_shouldCreatePlayer(Player p) {
+        int newId = service.createPlayer(p.getNick());
         int size = service.getPlayers().size();
         Player player = service.getPlayerById(newId);
 
         assertEquals(1, newId);
         assertEquals(1, size);
-        assertEquals(PLAYER_NAME, player.getNick());
+        assertEquals(p.getNick(), player.getNick());
+    }
+    public static Player[] getPlayers(){
+        return new Player[]{
+                new Player(1, "1", 1, true),
+                new Player(2, "2", 2, true),
+                new Player(3, "3", 3, true),
+        };
     }
 
-    @Test
-    @DisplayName("Игрок с ником `null`. Игрок не создается.")
-    public void shouldNotCreatePlayerWithNullNick() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.createPlayer(null));
-        assertEquals(0, service.getPlayers().size());
+    public static String[] getPlayerNames() {
+        // read file
+        // HTTP GET-request
+        // SELECT from DB
+        // RANDOM Generator
+        return new String[]{"12345", "abcde", "русский игрок", "_____Player1+++", "@@@@@"};
     }
 
-    @Test
-    @DisplayName("Игрок с пустым ником \"\". Игрок не создается.")
-    public void shouldNotCreatePlayerWithEmptyNick() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.createPlayer(""));
-        assertEquals(0, service.getPlayers().size());
-    }
-
-
-    @Test
-    @DisplayName("Игрок с пустым ником \" \". Игрок не создается.")
-    public void shouldNotCreatePlayerWithSpaceNick() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.createPlayer(" "));
+    @DisplayName("Игрок с невалидным ником `null`. Игрок не создается.")
+    @ParameterizedTest(name = "{index} => Создаем игрока с ником {0}")
+    @ValueSource(strings = {" "})
+    @NullAndEmptySource // @NullSource + @EmptySource
+    public void shouldNotCreatePlayerWithNullNick(String name) {
+        assertThrows(IllegalArgumentException.class, () -> service.createPlayer(name));
         assertEquals(0, service.getPlayers().size());
     }
 
@@ -70,8 +73,7 @@ public class PlayerServiceTest {
     @DisplayName("Игрок с таким именем уже существует. Игрок не создается.")
     public void shouldNotCreatePlayerNickAlreadyInUse() {
         int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(IllegalArgumentException.class,
-                () -> service.createPlayer(PLAYER_NAME));
+        assertThrows(IllegalArgumentException.class, () -> service.createPlayer(PLAYER_NAME));
         assertEquals(1, service.getPlayers().size());
         assertEquals(1, service.getPlayerById(newId).getId());
     }
@@ -98,21 +100,12 @@ public class PlayerServiceTest {
         assertEquals(20, service.getPlayerById(newId).getPoints());
     }
 
-    @Test
-    @DisplayName("Добавление очков игроку (отрицательное значение)")
-    public void shouldNotAddNegativePoints() {
+    @DisplayName("Добавление очков игроку. Негативные тесты")
+    @ParameterizedTest(name = "{index} => Добавление очков игроку {0}")
+    @ValueSource(ints = {0, -10, -100, -1, Integer.MIN_VALUE})
+    public void testPointsAddingParams(int points) {
         int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(IllegalArgumentException.class,
-                () -> service.addPoints(newId, -10));
-        assertEquals(0, service.getPlayerById(newId).getPoints());
-    }
-
-    @Test
-    @DisplayName("Добавление очков игроку (0 очков)")
-    public void shouldNotAddZeroPoints() {
-        int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(IllegalArgumentException.class,
-                () -> service.addPoints(newId, 0));
+        assertThrows(IllegalArgumentException.class, () -> service.addPoints(newId, points));
         assertEquals(0, service.getPlayerById(newId).getPoints());
     }
 
@@ -131,7 +124,6 @@ public class PlayerServiceTest {
     @DisplayName("Удаление несуществующего пользователя")
     public void shouldNotDeleteUnknownPlayer() {
         int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(NoSuchElementException.class,
-                () -> service.deletePlayer(newId + 1));
+        assertThrows(NoSuchElementException.class, () -> service.deletePlayer(newId + 1));
     }
 }

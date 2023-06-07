@@ -1,9 +1,13 @@
 package ru.inno.course.player;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import ru.inno.course.player.extensions.FileHelperExt;
+import ru.inno.course.player.extensions.HtmlReporter;
+import ru.inno.course.player.extensions.MyTestWatcher;
 import ru.inno.course.player.service.PlayerService;
 import ru.inno.course.player.service.PlayerServiceImpl;
 
@@ -14,6 +18,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Тесты на работу с файлом")
+@ExtendWith( { FileHelperExt.class, MyTestWatcher.class, HtmlReporter.class} )
 public class FileGeneratorTest {
     private PlayerService service;
     private final static String PLAYER_NAME = "Player name";
@@ -28,21 +34,17 @@ public class FileGeneratorTest {
         service = new PlayerServiceImpl();
     }
 
-    @AfterEach
-    public void deleteFileIfNeeded() throws IOException {
-        Files.deleteIfExists(filePath);
-    }
-
     @Test
+    @Tag("CRITICAL")
     @DisplayName("проверить, что корректно сформирован json-файл (после парсинга итогового файла, коллекции равны)")
-    public void shouldGenerateFileProperly() throws IOException {
+    public void shouldSaveFileProperly() throws IOException {
         int p1 = service.createPlayer(PLAYER_NAME + "_1");
         int p2 = service.createPlayer(PLAYER_NAME + "_2");
         int p3 = service.createPlayer(PLAYER_NAME + "_3");
 
         service.addPoints(p1, 10);
         service.addPoints(p2, 20);
-        service.addPoints(p3, 30);
+        service.addPoints(p3, 40); //30
 
         List<String> lines = Files.readAllLines(filePath);
         assertEquals(1, lines.size());
@@ -56,14 +58,36 @@ public class FileGeneratorTest {
     public void shouldLoadFileProperly() throws IOException {
         Files.write(filePath, FILE_CONTENT.getBytes());
         service = new PlayerServiceImpl();
-        assertEquals(3, service.getPlayers().size());
-        assertEquals(PLAYER_NAME+"_1", service.getPlayerById(1).getNick());
+        assertEquals(1, service.getPlayers().size()); // 3
+        assertEquals(PLAYER_NAME + "_1", service.getPlayerById(1).getNick());
         assertEquals(10, service.getPlayerById(1).getPoints());
 
-        assertEquals(PLAYER_NAME+"_2", service.getPlayerById(2).getNick());
+        assertEquals(PLAYER_NAME + "_2", service.getPlayerById(2).getNick());
         assertEquals(20, service.getPlayerById(2).getPoints());
 
-        assertEquals(PLAYER_NAME+"_3", service.getPlayerById(3).getNick());
+        assertEquals(PLAYER_NAME + "_3", service.getPlayerById(3).getNick());
         assertEquals(30, service.getPlayerById(3).getPoints());
+    }
+
+    @Test
+    @DisplayName("проверить, что корректно сохраняет json-файл (пустая коллекция)")
+    public void shouldSaveEmptyCollectionProperly() throws IOException {
+        int newId = service.createPlayer(PLAYER_NAME);
+        service.deletePlayer(newId);
+        assertEquals(0, service.getPlayers().size());
+
+        List<String> lines = Files.readAllLines(filePath);
+        assertEquals(1, lines.size());
+
+        String fileContentAsIs = lines.get(0);
+        assertEquals("[]", fileContentAsIs);
+    }
+
+    @Test
+    @DisplayName("проверить, что корректно прочитан json-файл (пустая коллекция)")
+    public void shouldLoadEmptyCollectionProperly() throws IOException {
+        Files.write(filePath, "[]".getBytes());
+        service = new PlayerServiceImpl();
+        assertEquals(0, service.getPlayers().size());
     }
 }
