@@ -6,14 +6,19 @@ import ru.inno.course.player.model.generics.Response;
 import java.util.Collection;
 
 public interface PlayerService {
-    /** получить игрока по id
+    /**
+     * Возвращает информацию об игроке по его id
      *
-     * @param id - айди игрока
-     * @return Response<Player>
+     * @param id id игрока
+     * @return Response<Player>. Статус, сообщение и игрок
      */
     Response<Player> getPlayerById(int id);
 
-    // получить список игроков
+    /**
+     * Возвращает список игроков
+     *
+     * @return Collection<Player>
+     */
     Response<Collection<Player>> getPlayers();
 
     // создать игрока (возвращает id нового игрока)
