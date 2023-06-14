@@ -18,10 +18,6 @@ public class ConsoleApp {
         while (true) {
             try {
                 String command = scanner.nextLine();
-                if (!isKnownCommand(command)) {
-                    System.out.println("Unknown command!");
-                    printHelp();
-                }
 
                 if (command.equalsIgnoreCase("list")) {
                     Collection<Player> players = service.getPlayers();
@@ -32,6 +28,7 @@ public class ConsoleApp {
                     for (Player player : players) {
                         System.out.println(player);
                     }
+                    continue;
                 }
 
                 // add Max
@@ -39,6 +36,7 @@ public class ConsoleApp {
                     String nick = command.substring(4);
                     int newPlayerId = service.createPlayer(nick);
                     System.out.println(newPlayerId);
+                    continue;
                 }
 
                 // get 1
@@ -47,6 +45,7 @@ public class ConsoleApp {
                     int id = Integer.parseInt(idAsString);
                     Player player = service.getPlayerById(id);
                     System.out.println(player);
+                    continue;
                 }
 
                 // delete 1
@@ -55,6 +54,7 @@ public class ConsoleApp {
                     int id = Integer.parseInt(idAsString);
                     Player player = service.deletePlayer(id);
                     System.out.println(player);
+                    continue;
                 }
 
                 // points 1 20 => [ "1", "20" ]
@@ -66,6 +66,7 @@ public class ConsoleApp {
 
                     int newScore = service.addPoints(id, points);
                     System.out.println(newScore);
+                    continue;
                 }
 
                 if (command.equalsIgnoreCase("quit")) {
@@ -74,23 +75,15 @@ public class ConsoleApp {
 
                 if (command.equalsIgnoreCase("help")) {
                     printHelp();
+                    continue;
                 }
+
+                System.out.println("Unknown command!");
             } catch (Exception ex) {
                 System.err.println(ex.getMessage());
             }
         }
 
-    }
-
-    private static boolean isKnownCommand(String command) {
-        String lowerCase = command.toLowerCase();
-        return lowerCase.equals("help")
-                || lowerCase.equals("quit")
-                || lowerCase.equals("list")
-                || lowerCase.startsWith("add ")
-                || lowerCase.startsWith("get ")
-                || lowerCase.startsWith("delete ")
-                || lowerCase.startsWith("points ");
     }
 
     private static void printHelp() {
