@@ -44,7 +44,7 @@ public class FileGeneratorTest {
 
         service.addPoints(p1, 10);
         service.addPoints(p2, 20);
-        service.addPoints(p3, 40); //30
+        service.addPoints(p3, 30);
 
         List<String> lines = Files.readAllLines(filePath);
         assertEquals(1, lines.size());
@@ -58,7 +58,7 @@ public class FileGeneratorTest {
     public void shouldLoadFileProperly() throws IOException {
         Files.write(filePath, FILE_CONTENT.getBytes());
         service = new PlayerServiceImpl();
-        assertEquals(1, service.getPlayers().size()); // 3
+        assertEquals(3, service.getPlayers().size());
         assertEquals(PLAYER_NAME + "_1", service.getPlayerById(1).getNick());
         assertEquals(10, service.getPlayerById(1).getPoints());
 
