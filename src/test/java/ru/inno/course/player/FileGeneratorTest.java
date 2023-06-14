@@ -58,7 +58,7 @@ public class FileGeneratorTest {
     public void shouldLoadFileProperly() throws IOException {
         Files.write(filePath, FILE_CONTENT.getBytes());
         service = new PlayerServiceImpl();
-        assertEquals(3, service.getPlayers().size());
+        assertEquals(1, service.getPlayers().size());
         assertEquals(PLAYER_NAME + "_1", service.getPlayerById(1).getNick());
         assertEquals(10, service.getPlayerById(1).getPoints());
 

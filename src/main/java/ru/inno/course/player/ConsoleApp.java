@@ -11,7 +11,6 @@ public class ConsoleApp {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-
         PlayerService service = new PlayerServiceImpl();
 
         printHelp();
