@@ -10,13 +10,11 @@ import ru.inno.course.player.extensions.FileHelperExt;
 import ru.inno.course.player.extensions.HtmlReporter;
 import ru.inno.course.player.extensions.MyTestWatcher;
 import ru.inno.course.player.model.Player;
+import ru.inno.course.player.model.status.Status;
 import ru.inno.course.player.service.PlayerService;
 import ru.inno.course.player.service.PlayerServiceImpl;
 
-import java.util.NoSuchElementException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Тесты на бизнес-логику")
@@ -36,9 +34,9 @@ public class PlayerServiceTest {
     @ParameterizedTest(name = "Имя игрока = {0}")
     @MethodSource("getPlayers")
     public void a_shouldCreatePlayer(Player p) {
-        int newId = service.createPlayer(p.getNick());
-        int size = service.getPlayers().size();
-        Player player = service.getPlayerById(newId);
+        int newId = service.createPlayer(p.getNick()).getPayload();
+        int size = service.getPlayers().getPayload().size();
+        Player player = service.getPlayerById(newId).getPayload();
 
         assertEquals(1, newId);
         assertEquals(1, size);
@@ -65,65 +63,65 @@ public class PlayerServiceTest {
     @ValueSource(strings = {" "})
     @NullAndEmptySource // @NullSource + @EmptySource
     public void shouldNotCreatePlayerWithNullNick(String name) {
-        assertThrows(IllegalArgumentException.class, () -> service.createPlayer(name));
-        assertEquals(0, service.getPlayers().size());
+        assertEquals(Status.USER_ERROR,service.createPlayer(name).getStatus());
+        assertEquals(0, service.getPlayers().getPayload().size());
     }
 
     @Test
     @DisplayName("Игрок с таким именем уже существует. Игрок не создается.")
     public void shouldNotCreatePlayerNickAlreadyInUse() {
-        int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(IllegalArgumentException.class, () -> service.createPlayer(PLAYER_NAME));
-        assertEquals(1, service.getPlayers().size());
-        assertEquals(1, service.getPlayerById(newId).getId());
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
+        assertEquals(Status.USER_ERROR,service.createPlayer(PLAYER_NAME).getStatus());
+        assertEquals(1, service.getPlayers().getPayload().size());
+        assertEquals(1, service.getPlayerById(newId).getPayload().getId());
     }
 
     @Test
     @DisplayName("Можно создать удаленного игрока")
     public void shouldAllowRecreatePlayer() {
-        int oldId = service.createPlayer(PLAYER_NAME);
+        int oldId = service.createPlayer(PLAYER_NAME).getPayload();
         service.deletePlayer(oldId);
-        int newId = service.createPlayer(PLAYER_NAME);
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
 
         assertEquals(1, oldId);
         assertEquals(2, newId);
-        assertEquals(1, service.getPlayers().size());
+        assertEquals(1, service.getPlayers().getPayload().size());
     }
 
     @Test
     @DisplayName("Добавление очков игроку")
     public void shouldAddPointsToPlayer() {
-        int newId = service.createPlayer(PLAYER_NAME);
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
         service.addPoints(newId, 10);
-        assertEquals(10, service.getPlayerById(newId).getPoints());
+        assertEquals(10, service.getPlayerById(newId).getPayload().getPoints());
         service.addPoints(newId, 10);
-        assertEquals(20, service.getPlayerById(newId).getPoints());
+        assertEquals(20, service.getPlayerById(newId).getPayload().getPoints());
     }
 
     @DisplayName("Добавление очков игроку. Негативные тесты")
     @ParameterizedTest(name = "{index} => Добавление очков игроку {0}")
     @ValueSource(ints = {0, -10, -100, -1, Integer.MIN_VALUE})
     public void testPointsAddingParams(int points) {
-        int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(IllegalArgumentException.class, () -> service.addPoints(newId, points));
-        assertEquals(0, service.getPlayerById(newId).getPoints());
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
+        assertEquals(Status.USER_ERROR, service.addPoints(newId, points).getStatus());
+        assertEquals(0, service.getPlayerById(newId).getPayload().getPoints());
     }
 
     @Test
     @DisplayName("Удаление существующего пользователя")
     public void shouldDeletePlayer() {
-        int newId = service.createPlayer(PLAYER_NAME);
-        Player p = service.deletePlayer(newId);
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
+        Player p = service.deletePlayer(newId).getPayload();
 
         assertEquals(newId, p.getId());
         assertEquals(PLAYER_NAME, p.getNick());
-        assertEquals(0, service.getPlayers().size());
+        assertEquals(0, service.getPlayers().getPayload().size());
     }
 
     @Test
     @DisplayName("Удаление несуществующего пользователя")
     public void shouldNotDeleteUnknownPlayer() {
-        int newId = service.createPlayer(PLAYER_NAME);
-        assertThrows(NoSuchElementException.class, () -> service.deletePlayer(newId + 1));
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
+        assertEquals(Status.USER_ERROR, service.deletePlayer(newId + 1).getStatus());
     }
 }

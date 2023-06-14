@@ -3,6 +3,8 @@ package ru.inno.course.player.service;
 import ru.inno.course.player.data.DataProvider;
 import ru.inno.course.player.data.DataProviderJSON;
 import ru.inno.course.player.model.Player;
+import ru.inno.course.player.model.generics.Response;
+import ru.inno.course.player.model.status.Status;
 
 import java.util.*;
 
@@ -18,30 +20,36 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public Player getPlayerById(int id) {
+    public Response<Player> getPlayerById(int id) {
         if (!this.players.containsKey(id)) {
-            throw new NoSuchElementException("No such user: " + id);
+            new Response<>(Status.USER_ERROR, "No such user: " + id, null);
         }
 
-        return this.players.get(id);
+        return new Response<>(Status.OK, "Ok", this.players.get(id));
     }
 
     @Override
-    public Collection<Player> getPlayers() {
-        return this.players.values();
+    public Response<Collection<Player>> getPlayers() {
+        Collection<Player> values = this.players.values();
+        String text = "Ok";
+        if (values.isEmpty()) {
+            text = "empty collection";
+        }
+
+        return new Response<>(Status.OK, text, values);
     }
 
     @Override
-    public int createPlayer(String nickname) {
+    public Response<Integer> createPlayer(String nickname) {
         if (nickname == null) {
-            throw new IllegalArgumentException("Nickname is required");
+            return new Response<>(Status.USER_ERROR, "Nickname is required", -1);
         }
 
         if (nickname.isBlank()) {
-            throw new IllegalArgumentException("Nickname is blank");
+            return new Response<>(Status.USER_ERROR, "Nickname is blank", -1);
         }
         if (nicknames.contains(nickname)) {
-            throw new IllegalArgumentException("Nickname is already in use: " + nickname);
+            return new Response<>(Status.USER_ERROR, "Nickname is already in use: " + nickname, -1);
         }
 
         counter++;
@@ -49,29 +57,29 @@ public class PlayerServiceImpl implements PlayerService {
         this.players.put(player.getId(), player);
         this.nicknames.add(nickname);
         saveToFile();
-        return player.getId();
+        return new Response<>(Status.OK, "Created", player.getId());
     }
 
     @Override
-    public Player deletePlayer(int id) {
+    public Response<Player> deletePlayer(int id) {
         if (!this.players.containsKey(id)) {
-            throw new NoSuchElementException("No such user: " + id);
+            return new Response<>(Status.USER_ERROR, "No such user: " + id, null);
         }
 
         Player p = this.players.remove(id);
         nicknames.remove(p.getNick());
         saveToFile();
-        return p;
+        return new Response<>(Status.OK, "Deleted", p);
     }
 
     @Override
-    public int addPoints(int playerId, int points) {
+    public Response<Integer> addPoints(int playerId, int points) {
         if (!this.players.containsKey(playerId)) {
-            throw new NoSuchElementException("No such user: " + playerId);
+            return new Response<>(Status.USER_ERROR, "No such user: " + playerId, -1);
         }
 
         if (points < 1) {
-            throw new IllegalArgumentException("Points must be greater than 0: " + points);
+            return new Response<>(Status.USER_ERROR, "Points must be greater than 0: " + points, -1);
         }
 
         Player player = this.players.get(playerId);
@@ -79,7 +87,7 @@ public class PlayerServiceImpl implements PlayerService {
         int newPoints = currentPoints + points;
         player.setPoints(newPoints);
         saveToFile();
-        return player.getPoints();
+        return new Response<>(Status.OK, "Added", player.getPoints());
     }
 
     private void initStorages() {

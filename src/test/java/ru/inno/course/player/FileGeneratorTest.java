@@ -19,7 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisplayName("Тесты на работу с файлом")
-@ExtendWith( { FileHelperExt.class, MyTestWatcher.class, HtmlReporter.class} )
+@ExtendWith({FileHelperExt.class, MyTestWatcher.class, HtmlReporter.class})
 public class FileGeneratorTest {
     private PlayerService service;
     private final static String PLAYER_NAME = "Player name";
@@ -38,9 +38,9 @@ public class FileGeneratorTest {
     @Tag("CRITICAL")
     @DisplayName("проверить, что корректно сформирован json-файл (после парсинга итогового файла, коллекции равны)")
     public void shouldSaveFileProperly() throws IOException {
-        int p1 = service.createPlayer(PLAYER_NAME + "_1");
-        int p2 = service.createPlayer(PLAYER_NAME + "_2");
-        int p3 = service.createPlayer(PLAYER_NAME + "_3");
+        int p1 = service.createPlayer(PLAYER_NAME + "_1").getPayload();
+        int p2 = service.createPlayer(PLAYER_NAME + "_2").getPayload();
+        int p3 = service.createPlayer(PLAYER_NAME + "_3").getPayload();
 
         service.addPoints(p1, 10);
         service.addPoints(p2, 20);
@@ -58,23 +58,23 @@ public class FileGeneratorTest {
     public void shouldLoadFileProperly() throws IOException {
         Files.write(filePath, FILE_CONTENT.getBytes());
         service = new PlayerServiceImpl();
-        assertEquals(1, service.getPlayers().size());
-        assertEquals(PLAYER_NAME + "_1", service.getPlayerById(1).getNick());
-        assertEquals(10, service.getPlayerById(1).getPoints());
+        assertEquals(3, service.getPlayers().getPayload().size());
+        assertEquals(PLAYER_NAME + "_1", service.getPlayerById(1).getPayload().getNick());
+        assertEquals(10, service.getPlayerById(1).getPayload().getPoints());
 
-        assertEquals(PLAYER_NAME + "_2", service.getPlayerById(2).getNick());
-        assertEquals(20, service.getPlayerById(2).getPoints());
+        assertEquals(PLAYER_NAME + "_2", service.getPlayerById(2).getPayload().getNick());
+        assertEquals(20, service.getPlayerById(2).getPayload().getPoints());
 
-        assertEquals(PLAYER_NAME + "_3", service.getPlayerById(3).getNick());
-        assertEquals(30, service.getPlayerById(3).getPoints());
+        assertEquals(PLAYER_NAME + "_3", service.getPlayerById(3).getPayload().getNick());
+        assertEquals(30, service.getPlayerById(3).getPayload().getPoints());
     }
 
     @Test
     @DisplayName("проверить, что корректно сохраняет json-файл (пустая коллекция)")
     public void shouldSaveEmptyCollectionProperly() throws IOException {
-        int newId = service.createPlayer(PLAYER_NAME);
+        int newId = service.createPlayer(PLAYER_NAME).getPayload();
         service.deletePlayer(newId);
-        assertEquals(0, service.getPlayers().size());
+        assertEquals(0, service.getPlayers().getPayload().size());
 
         List<String> lines = Files.readAllLines(filePath);
         assertEquals(1, lines.size());
@@ -88,6 +88,6 @@ public class FileGeneratorTest {
     public void shouldLoadEmptyCollectionProperly() throws IOException {
         Files.write(filePath, "[]".getBytes());
         service = new PlayerServiceImpl();
-        assertEquals(0, service.getPlayers().size());
+        assertEquals(0, service.getPlayers().getPayload().size());
     }
 }

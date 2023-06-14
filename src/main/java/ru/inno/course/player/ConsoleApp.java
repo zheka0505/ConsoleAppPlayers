@@ -1,6 +1,8 @@
 package ru.inno.course.player;
 
 import ru.inno.course.player.model.Player;
+import ru.inno.course.player.model.generics.Response;
+import ru.inno.course.player.model.status.Status;
 import ru.inno.course.player.service.PlayerService;
 import ru.inno.course.player.service.PlayerServiceImpl;
 
@@ -20,12 +22,13 @@ public class ConsoleApp {
                 String command = scanner.nextLine();
 
                 if (command.equalsIgnoreCase("list")) {
-                    Collection<Player> players = service.getPlayers();
-                    if (players.size() == 0) {
-                        System.out.println("Empty player list");
+                    Response<Collection<Player>> players = service.getPlayers();
+
+                    if (players.getPayload().size() == 0) {
+                        System.out.println(players.getMessage());
                     }
 
-                    for (Player player : players) {
+                    for (Player player : players.getPayload()) {
                         System.out.println(player);
                     }
                     continue;
@@ -34,8 +37,12 @@ public class ConsoleApp {
                 // add Max
                 if (command.toLowerCase().startsWith("add ")) {
                     String nick = command.substring(4);
-                    int newPlayerId = service.createPlayer(nick);
-                    System.out.println(newPlayerId);
+                    Response<Integer> response = service.createPlayer(nick);
+                    if (response.getStatus().equals(Status.OK)) {
+                        System.out.println(response.getPayload());
+                    } else {
+                        System.err.println(response.getMessage());
+                    }
                     continue;
                 }
 
@@ -43,8 +50,13 @@ public class ConsoleApp {
                 if (command.toLowerCase().startsWith("get ")) {
                     String idAsString = command.substring(4);
                     int id = Integer.parseInt(idAsString);
-                    Player player = service.getPlayerById(id);
-                    System.out.println(player);
+                    Response<Player> response = service.getPlayerById(id);
+                    if (response.getStatus().equals(Status.OK)) {
+                        System.out.println(response.getPayload());
+                        ;
+                    } else {
+                        System.err.println(response.getMessage());
+                    }
                     continue;
                 }
 
@@ -52,8 +64,13 @@ public class ConsoleApp {
                 if (command.toLowerCase().startsWith("delete ")) {
                     String idAsString = command.substring(7);
                     int id = Integer.parseInt(idAsString);
-                    Player player = service.deletePlayer(id);
-                    System.out.println(player);
+                    Response<Player> response = service.deletePlayer(id);
+                    if (response.getStatus().equals(Status.OK)) {
+                        System.out.println(response.getPayload());
+                        ;
+                    } else {
+                        System.err.println(response.getMessage());
+                    }
                     continue;
                 }
 
@@ -63,9 +80,13 @@ public class ConsoleApp {
                     String[] arguments = argsString.split(" ");
                     int id = Integer.parseInt(arguments[0]);
                     int points = Integer.parseInt(arguments[1]);
-
-                    int newScore = service.addPoints(id, points);
-                    System.out.println(newScore);
+                    Response<Integer> response = service.addPoints(id, points);
+                    if (response.getStatus().equals(Status.OK)) {
+                        System.out.println(response.getPayload());
+                        ;
+                    } else {
+                        System.err.println(response.getMessage());
+                    }
                     continue;
                 }
 
