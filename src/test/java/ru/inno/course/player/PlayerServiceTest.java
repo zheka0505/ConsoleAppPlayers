@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 // желто-оранжевый - тест упал на проверке
 // зеленый - тест прошел
 // красный - тест взорвался, не удалось
