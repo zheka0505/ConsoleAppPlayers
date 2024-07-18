@@ -63,6 +63,11 @@ public class PlayerServiceImpl implements PlayerService {
 
         Player player = this.players.get(playerId);
         int currentPoints = player.getPoints();
+
+        if(points > 100){
+            points = 100;
+        }
+
         int newPoints = currentPoints + points;
         player.setPoints(newPoints);
         saveToFile();

@@ -16,7 +16,6 @@ public class MyTest {
         Files.deleteIfExists(Path.of("./data.json"));
         PlayerService service = new PlayerServiceImpl();
 
-
         TestCase case1 = new TestCase("1. добавить игрока - проверить наличие в списке", () -> {
             Collection<Player> listBefore = service.getPlayers();
             if (listBefore.size() != 0) {
