@@ -13,7 +13,6 @@ public interface PlayerService {
 
     // создать игрока (возвращает id нового игрока)
     int createPlayer(String nickname);
-
     // удалить игрока по id'шнику, вернет удаленного игрока
     Player deletePlayer(int id);
 

@@ -1,9 +1,12 @@
 package ru.inno.course.player;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import ru.inno.course.player.ext.BeforeEachDemo;
+import ru.inno.course.player.ext.MyTestWatcher;
 import ru.inno.course.player.ext.PlayersAndPointsProvider;
 import ru.inno.course.player.ext.PointsProvider;
 import ru.inno.course.player.model.Player;
@@ -23,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 // 2. Главный код ничего не знает про тесты.
 // 3. В тестах не должно быть if'ов
 
+@ExtendWith(MyTestWatcher.class)
+//@ExtendWith(BeforeEachDemo.class)
 public class PlayerServiceTest {
     private PlayerService service;
     private static final String NICKNAME = "Nikita";
@@ -39,6 +44,8 @@ public class PlayerServiceTest {
     }
 
     @Test
+    @Tag("позитивные")
+    @Disabled("Jira-123")
     @DisplayName("Создаем игрока и проверяем его значения по дефолту")
     public void iCanAddNewPlayer() {
         Collection<Player> listBefore = service.getPlayers();
@@ -54,6 +61,7 @@ public class PlayerServiceTest {
     }
 
     @Test
+    @Tag("негативный")
     @DisplayName("Нельзя создать дубликат игрока")
     public void iCannotCreateADuplicate() {
         service.createPlayer(NICKNAME);
@@ -61,9 +69,10 @@ public class PlayerServiceTest {
     }
 
     @Test
+    @Tags({ @Tag("негативный"), @Tag("CRITICAL") } )
     @DisplayName("Нельзя получить несуществующего пользователя")
     public void iCannotGetEmptyUser() {
-        assertThrows(NoSuchElementException.class, () -> service.getPlayerById(9999));
+        assertThrows(IllegalArgumentException.class, () -> service.getPlayerById(9999));
     }
 
     @ParameterizedTest
@@ -99,4 +108,3 @@ public class PlayerServiceTest {
     }
 
 }
-
