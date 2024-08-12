@@ -1,5 +1,6 @@
 package ru.inno.course.player.certificationZheka;
 
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.junit.jupiter.api.*;
 import ru.inno.course.player.data.DataProviderJSON;
 import ru.inno.course.player.model.Player;
@@ -17,13 +18,12 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PlayerServiceTestCert {
+public class PlayerServiceTests {
     private PlayerService service;
-    private static final String NICKNAME = "zheka";
+    private static final String NICKNAME = "bob";
     private static final String ANOTHERNICKNAME = "NIKITA";
-    private static final String FIFTEENCHARACTERS = "Rhoshandiatelly";
-    private static final String SIXTEENCHARACTERS = "Rhoshandiatellyy";
-
+    private static final String CHARACTERS15 = "Rhoshandiatelly";
+    private static final String CHARACTERS16 = "Rhoshandiatellyy";
 
     @BeforeEach
     public void setUp() {
@@ -37,15 +37,15 @@ public class PlayerServiceTestCert {
     }
 
     @Test
-    @DisplayName("Позитивный 1, 3 и 7: Создаем игрока и проверяем его значения по дефолту/нет json-файла/получить игрока по id")
-    public void createNewPlayerWithoutJson() {
+    @DisplayName("Позитивный 1: добавить игрока - проверить наличие в списке")
+    public void createNewPlayer() {
         Collection<Player> listBefore = service.getPlayers();
         assertEquals(0, listBefore.size());
 
-        int zhekaId = service.createPlayer(NICKNAME);
-        Player playerById = service.getPlayerById(zhekaId);
+        int newPlayerId = service.createPlayer(NICKNAME);
+        Player playerById = service.getPlayerById(newPlayerId);
 
-        assertEquals(zhekaId, playerById.getId());
+        assertEquals(newPlayerId, playerById.getId());
         assertEquals(0, playerById.getPoints());
         assertEquals(NICKNAME, playerById.getNick());
         assertTrue(playerById.isOnline());
@@ -53,12 +53,22 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 2: Удаление игрока, проверяем что его нет в списке")
-    public void delatePlayer() {
-        int zhekaId = service.createPlayer(NICKNAME);
-        service.deletePlayer(zhekaId);
+    public void deletePlayer() {
+        int newPlayerId = service.createPlayer(NICKNAME);
+        service.deletePlayer(newPlayerId);
 
-        assertThrows(NoSuchElementException.class, () -> service.getPlayerById(zhekaId));
+        assertThrows(NoSuchElementException.class, () -> service.getPlayerById(newPlayerId));
 
+    }
+
+    @Test
+    @DisplayName("Позитивный 3: (нет json-файла) добавить игрока")
+    public void createNewPlayerWithoutJson() {
+        int newPlayerId = service.createPlayer(NICKNAME);
+        Player playerById = service.getPlayerById(newPlayerId);
+
+        assertEquals(newPlayerId, playerById.getId());
+        assertEquals(NICKNAME, playerById.getNick());
     }
 
     @Test
@@ -66,17 +76,17 @@ public class PlayerServiceTestCert {
     public void createNewPlayerWithJson() {
         service.createPlayer(ANOTHERNICKNAME);
 
-        int zhekaId = service.createPlayer(NICKNAME);
-        Player playerById = service.getPlayerById(zhekaId);
+        int newPlayerId = service.createPlayer(NICKNAME);
+        Player playerById = service.getPlayerById(newPlayerId);
 
-        assertEquals(zhekaId, playerById.getId());
+        assertEquals(newPlayerId, playerById.getId());
     }
 
     @Test
     @DisplayName("Позитивный 5: Начислить баллы существующему игроку")
     public void addNewPointsToPlayer() {
-        int zhekaId = service.createPlayer(NICKNAME);
-        int playerPoints = service.addPoints(zhekaId, 100);
+        int newPlayerId = service.createPlayer(NICKNAME);
+        int playerPoints = service.addPoints(newPlayerId, 100);
 
         assertEquals(100, playerPoints);
     }
@@ -84,22 +94,31 @@ public class PlayerServiceTestCert {
     @Test
     @DisplayName("Позитивный 6: Добавить очков поверх существующих")
     public void addPointsToPlayerTwice() {
-        int zhekaId = service.createPlayer(NICKNAME);
-        service.addPoints(zhekaId, 100);
-        int playerPoints = service.addPoints(zhekaId, 55);
+        int newPlayerId = service.createPlayer(NICKNAME);
+        service.addPoints(newPlayerId, 100);
+        int playerPoints = service.addPoints(newPlayerId, 55);
 
         assertEquals(155, playerPoints);
     }
 
     @Test
+    @DisplayName("Позитивный 7: (добавить игрока) - получить игрока по id")
+    public void getCreatedPlayer() {
+        int newPlayerId = service.createPlayer(NICKNAME);
+        Player playerById = service.getPlayerById(newPlayerId);
+
+        assertEquals(newPlayerId, playerById.getId());
+    }
+
+    @Test
     @DisplayName("Позитивный 8: Поверить корректность сохранения в файл")
     public void saveFileData() throws IOException {
-        int zhekaId = service.createPlayer(NICKNAME);
+        int newPlayerId = service.createPlayer(NICKNAME);
 
         DataProviderJSON provider = new DataProviderJSON();
         List<Player> currentList = (List<Player>) provider.load();
 
-        assertEquals(zhekaId, currentList.get(0).getId());
+        assertEquals(newPlayerId, currentList.get(0).getId());
         assertEquals(0, currentList.get(0).getPoints());
         assertEquals(NICKNAME, currentList.get(0).getNick());
         assertTrue(currentList.get(0).isOnline());
@@ -109,12 +128,12 @@ public class PlayerServiceTestCert {
     @Test
     @DisplayName("Позитивный 9: проверить корректность загрузки json-файла: не потеряли, не 'побили' записи")
     public void loadFileData() {
-        int zhekaId = service.createPlayer(NICKNAME);
+        int newPlayerId = service.createPlayer(NICKNAME);
         int nikitaId = service.createPlayer(ANOTHERNICKNAME);
 
         List<Player> players = new ArrayList<>(service.getPlayers());
 
-        assertEquals(zhekaId, players.get(0).getId());
+        assertEquals(newPlayerId, players.get(0).getId());
         assertEquals(0, players.get(0).getPoints());
         assertEquals(NICKNAME, players.get(0).getNick());
         assertTrue(players.get(0).isOnline());
@@ -131,15 +150,15 @@ public class PlayerServiceTestCert {
     public void createPlayerWithUniqueId() {
         service.createPlayer("test1");
         service.createPlayer("test2");
-        int zhekaId = service.createPlayer(NICKNAME);
+        int newPlayerId = service.createPlayer(NICKNAME);
         service.createPlayer("test4");
         service.createPlayer("test5");
 
-        service.deletePlayer(zhekaId);
+        service.deletePlayer(newPlayerId);
 
-        int nikitaId = service.createPlayer(ANOTHERNICKNAME);
+        int anotherPlayerId = service.createPlayer(ANOTHERNICKNAME);
 
-        assertEquals(6, nikitaId);
+        assertEquals(6, anotherPlayerId);
     }
 
 
@@ -155,11 +174,11 @@ public class PlayerServiceTestCert {
     @Test
     @DisplayName("Позитивный 12: Проверить создание игрока с 15 символами")
     public void createNewPlayerWith15Characters() {
-        int newPlayerId = service.createPlayer(FIFTEENCHARACTERS);
+        int newPlayerId = service.createPlayer(CHARACTERS15);
         Player playerById = service.getPlayerById(newPlayerId);
 
         assertEquals(newPlayerId, playerById.getId());
-        assertEquals(FIFTEENCHARACTERS, playerById.getNick());
+        assertEquals(CHARACTERS15, playerById.getNick());
 
     }
 
@@ -201,14 +220,14 @@ public class PlayerServiceTestCert {
     @Test
     @DisplayName("Негативный 5: начислить отрицательное число очков")
     public void addNegativePointsToPlayer() {
-        int zhekaId = service.createPlayer(NICKNAME);
-        int playerPoints = service.addPoints(zhekaId, -55);
+        int newPlayerId = service.createPlayer(NICKNAME);
+        int playerPoints = service.addPoints(newPlayerId, -55);
 
         assertEquals(-55, playerPoints);
 
         //вот такой должен был быть правильный тест, если бы проверка на отрицательное значение была:
-        //int zhekaId = service.createPlayer(NICKNAME);
-        //assertThrows(IllegalArgumentException.class, () -> service.addPoints(zhekaId, -55));
+        //int newPlayerId = service.createPlayer(NICKNAME);
+        //assertThrows(IllegalArgumentException.class, () -> service.addPoints(newPlayerId, -55));
     }
 
     @Test
@@ -220,15 +239,83 @@ public class PlayerServiceTestCert {
     }
 
     @Test
+    @DisplayName("Негативный 7: Проверить загрузку системы с другим json-файлом")
+    public void loadFileDifferentJson() throws IOException {
+
+        String data = """
+                [
+                        {
+                            "id": 1,
+                                "name": "car",
+                                "color": red,
+                                "price": 40
+                        },
+                                {
+                            "id": 2,
+                                "name": "car",
+                                "color": yellow,
+                                "price": 40
+                        }
+                ]""";
+        Files.writeString(Path.of("./data.json"), data);
+
+        DataProviderJSON provider = new DataProviderJSON();
+
+        assertThrows(NoSuchElementException.class, () -> service.getPlayerById(1));
+        assertThrows(UnrecognizedPropertyException.class, provider::load);
+
+    }
+
+    @Test
+    @DisplayName("Негативный 8: проверить корректность загрузки json-файла - есть дубликаты")
+    public void loadFileJsonWithDuplicates() throws IOException {
+
+        String data = """
+                [
+                  {
+                    "id": 1,
+                    "nick": "bob",
+                    "points": 0,
+                    "online": true
+                  },
+                  {
+                    "id": 1,
+                    "nick": "sam",
+                    "points": 0,
+                    "online": true
+                  }
+                ]""";
+        Files.writeString(Path.of("./data.json"), data);
+
+        DataProviderJSON provider = new DataProviderJSON();
+        List<Player> currentList = (List<Player>) provider.load();
+
+        assertEquals(1, currentList.get(0).getId());
+        assertEquals(0, currentList.get(0).getPoints());
+        assertEquals("bob", currentList.get(0).getNick());
+        assertTrue(currentList.get(0).isOnline());
+
+        assertEquals(1, currentList.get(1).getId());
+        assertEquals(0, currentList.get(1).getPoints());
+        assertEquals("sam", currentList.get(1).getNick());
+        assertTrue(currentList.get(1).isOnline());
+
+
+        //такие assert должны были быть, если бы была проверка на уникальность id:
+        //assertThrows(IllegalArgumentException.class, () -> service.getPlayerById(1));
+        //assertThrows(IllegalArgumentException.class, provider::load);
+    }
+
+    @Test
     @DisplayName("Негативный 9: Проверить создание игрока с 16 символами")
     public void createNewPlayerWith16Characters() {
 
-        int newPlayerId = service.createPlayer(SIXTEENCHARACTERS);
+        int newPlayerId = service.createPlayer(CHARACTERS16);
         Player playerById = service.getPlayerById(newPlayerId);
 
-        assertEquals(SIXTEENCHARACTERS, playerById.getNick());
+        assertEquals(CHARACTERS16, playerById.getNick());
 
         //вот такой должен был быть правильный тест, если бы проверка на количество символов была:
-        //assertThrows(IllegalArgumentException.class, () -> service.createPlayer(SIXTEENCHARACTERS));
+        //assertThrows(IllegalArgumentException.class, () -> service.createPlayer(CHARACTERS16));
     }
 }
