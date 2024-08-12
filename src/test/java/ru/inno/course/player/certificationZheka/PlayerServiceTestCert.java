@@ -17,10 +17,6 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// 1. Тест не должен настраивать свое окружение.
-// 2. Главный код ничего не знает про тесты.
-// 3. В тестах не должно быть if'ов
-
 public class PlayerServiceTestCert {
     private PlayerService service;
     private static final String NICKNAME = "zheka";
@@ -42,7 +38,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 1, 3 и 7: Создаем игрока и проверяем его значения по дефолту/нет json-файла/получить игрока по id")
-    public void iCanAddNewPlayerWithoutJson() {
+    public void createNewPlayerWithoutJson() {
         Collection<Player> listBefore = service.getPlayers();
         assertEquals(0, listBefore.size());
 
@@ -57,7 +53,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 2: Удаление игрока, проверяем что его нет в списке")
-    public void iCanDelatePlayer() {
+    public void delatePlayer() {
         int zhekaId = service.createPlayer(NICKNAME);
         service.deletePlayer(zhekaId);
 
@@ -67,7 +63,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 4: Создаем игрока и проверяем его id (есть json-файл)")
-    public void iCanAddNewPlayerWithJson() {
+    public void createNewPlayerWithJson() {
         service.createPlayer(ANOTHERNICKNAME);
 
         int zhekaId = service.createPlayer(NICKNAME);
@@ -78,7 +74,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 5: Начислить баллы существующему игроку")
-    public void iCanAddNewPointsToPlayer() {
+    public void addNewPointsToPlayer() {
         int zhekaId = service.createPlayer(NICKNAME);
         int playerPoints = service.addPoints(zhekaId, 100);
 
@@ -87,7 +83,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 6: Добавить очков поверх существующих")
-    public void iCanAddPointsToPlayer() {
+    public void addPointsToPlayerTwice() {
         int zhekaId = service.createPlayer(NICKNAME);
         service.addPoints(zhekaId, 100);
         int playerPoints = service.addPoints(zhekaId, 55);
@@ -97,7 +93,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 8: Поверить корректность сохранения в файл")
-    public void checkSaveFileData() throws IOException {
+    public void saveFileData() throws IOException {
         int zhekaId = service.createPlayer(NICKNAME);
 
         DataProviderJSON provider = new DataProviderJSON();
@@ -112,7 +108,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 9: проверить корректность загрузки json-файла: не потеряли, не 'побили' записи")
-    public void checkLoadFileData() {
+    public void loadFileData() {
         int zhekaId = service.createPlayer(NICKNAME);
         int nikitaId = service.createPlayer(ANOTHERNICKNAME);
 
@@ -132,7 +128,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 10: Проверить, что id всегда уникальный. Создать 5, удалить 3-го, добавить еще одного")
-    public void checkUniqueId() {
+    public void createPlayerWithUniqueId() {
         service.createPlayer("test1");
         service.createPlayer("test2");
         int zhekaId = service.createPlayer(NICKNAME);
@@ -149,7 +145,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 11: (нет json-файла) запросить список игроков")
-    public void checkNoPlayers() {
+    public void getEmptyListOfPlayers() {
         Collection<Player> players = service.getPlayers();
 
         assertEquals(0, players.size());
@@ -158,7 +154,7 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Позитивный 12: Проверить создание игрока с 15 символами")
-    public void iCanAddNewPlayerWith15Characters() {
+    public void createNewPlayerWith15Characters() {
         int newPlayerId = service.createPlayer(FIFTEENCHARACTERS);
         Player playerById = service.getPlayerById(newPlayerId);
 
@@ -194,6 +190,7 @@ public class PlayerServiceTestCert {
     @Test
     @DisplayName("Негативный 4: сохранить игрока с пустым ником")
     public void createPlayerWithEmptyNick() {
+        //нельзя не передавать ник, поэтому сделано так
         int newPlayerId = service.createPlayer("");
         Player playerById = service.getPlayerById(newPlayerId);
 
@@ -203,17 +200,21 @@ public class PlayerServiceTestCert {
 
     @Test
     @DisplayName("Негативный 5: начислить отрицательное число очков")
-    public void iCanAddNegativePointsToPlayer() {
+    public void addNegativePointsToPlayer() {
         int zhekaId = service.createPlayer(NICKNAME);
         int playerPoints = service.addPoints(zhekaId, -55);
 
         assertEquals(-55, playerPoints);
+
+        //вот такой должен был быть правильный тест, если бы проверка на отрицательное значение была:
+        //int zhekaId = service.createPlayer(NICKNAME);
+        //assertThrows(IllegalArgumentException.class, () -> service.addPoints(zhekaId, -55));
     }
 
     @Test
     @DisplayName("Негативный 6: Накинуть очков игроку, которого нет")
-    public void iCanAddPointsToNotExistedPlayer() {
-       service.createPlayer(NICKNAME);
+    public void addPointsToNotExistedPlayer() {
+        service.createPlayer(NICKNAME);
 
         assertThrows(NoSuchElementException.class, () -> service.addPoints(5, 50));
     }
@@ -227,7 +228,7 @@ public class PlayerServiceTestCert {
 
         assertEquals(SIXTEENCHARACTERS, playerById.getNick());
 
-        //вот такой должен был быть правильный тест, если бы проверка на количество символов была
+        //вот такой должен был быть правильный тест, если бы проверка на количество символов была:
         //assertThrows(IllegalArgumentException.class, () -> service.createPlayer(SIXTEENCHARACTERS));
     }
 }
